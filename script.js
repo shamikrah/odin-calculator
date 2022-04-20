@@ -1,4 +1,4 @@
-function add(n1, n1) {
+function add(n1, n2) {
     return round(n1 + n2);
 }
 
@@ -11,100 +11,188 @@ function multiply(n1, n2) {
 }
 
 function divide(n1, n2) {
-    return n2 != 0 ? round(n1 / n2) : "Nice try bro";
+    return n2 != 0 ? round(n1 / n2) : "Error!";
 }
 
 function round(n) {
-    return +(Math.round(n + "e+7")  + "e-7");
+    return +(Math.round(n + "e+7") + "e-7");
 }
 
-function operate(op, n1, n2) {
-    switch (op) {
-        case a:
-            add(n1, n2);
-            break;
-        case s:
-            subtract(n1, n2);
-            break;
-        case m:
-            multiply(n1, n2);
-            break;
-        case d:
-            divide(n1, n2);
-            break;
+function operate(n1, n2, operator) {
+    switch (operator) {
+        case '+':
+            return add(n1, n2);
+        case '-':
+            return subtract(n1, n2);
+        case 'x':
+            return multiply(n1, n2);
+        case '÷':
+            return divide(n1, n2);
     }
 }
 
-let inputsArray = [];
+let inputsArray = [undefined, undefined, undefined];
 
-function storeInputs(value1, value2, operation) {
-    if (value1 != null) {
-        inputsArray[0] = value1;
+function resetInputsArray() {
+    inputsArray = [undefined, undefined, undefined];
+}
+
+function inputsArrayFull() {
+    if (!inputsArray.includes(undefined)) return true;
+}
+
+function operandExists() {
+    if (!(inputsArray[0] == undefined)) return true;
+}
+
+function storeCalculationInputs(operand, operator) {
+    if (inputsArray[0] == undefined) {
+        inputsArray[0] = operand;
     }
-    else if (value2 != null) {
-        inputsArray[1] = value1;
+    else if (inputsArray[1] == undefined) {
+        inputsArray[1] = operand;
     }
-    else if (operation != null) {
-        inputsArray[2] = value1;
+    else if (inputsArray[0] != undefined && inputsArray[1] != undefined) {
+        inputsArray[0] = operand;
+        inputsArray[1] = undefined;
+        inputsArray[2] = operator;
+    }
+    if (operator != undefined) {
+        inputsArray[2] = operator;
     }
     console.log(inputsArray);
 }
 
+function calculateResult() {
+    storeCalculationInputs(+display.textContent, undefined);
+    let result = operate(inputsArray[0], inputsArray[1], inputsArray[2]);
+    console.log(`Result is ${result}`);
+    return result;
+}
+
+function numberOrDecimalFn() {
+
+}
+
+function operatorFn(operator) {
+    operatorPressed = true;
+    updateDisplay('operator', operator);
+}
+
 function clearFn() {
-    inputsArray = [];
+    resetInputsArray();
+    decimalCount = 0;
     updateDisplay('clear', 0);
 }
 
 function deleteFn() {
-    inputsArray = [];
     updateDisplay('delete', 0);
 }
 
+const display = document.querySelector('.display');
+let operatorPressed = false;
 let decimalCount = 0;
-function updateDisplay(operation, value) {
-    const display = document.querySelector('.display');
-    if (operation == 'none') {
-        if (display.textContent.length > 15) {
+function updateDisplay(fn, input) {
+    if (fn == 'none') {
+        if (operatorPressed) {
+            display.textContent = input;
+            operatorPressed = false;
             return;
         }
-        else if (display.textContent == '0') {
-            if (value == '.') {
+        else if (display.textContent.length > 15) {
+            return;
+        }
+        else if (display.textContent == '0' || display.textContent == "Error!") {
+            if (input == '.') {
                 decimalCount++;
             }
-            display.textContent = value;
+            display.textContent = input;
             return;
         }
         else {
-            if (value == '.') {
+            if (input == '.') {
                 if (decimalCount == 1) {
                     return;
                 }
                 decimalCount++;
             }
-            display.textContent += value;
+            display.textContent += input;
         }
     }
-    else if (operation == 'clear') {
-        display.textContent = value;
+    else if (fn == 'clear') {
+        display.textContent = input;
     }
-    else if (operation == 'delete') {
-        display.textContent = value;
+    else if (fn == 'delete') {
+        let lastChar = display.textContent.charAt(display.textContent.length - 1);
+        let lastCharIsDecimal = lastChar == '.' ? true : false;
+        if (display.textContent.length == 1) {
+            if (lastCharIsDecimal) {
+                decimalCount = 0;
+            }
+            display.textContent = input;
+        }
+        else if (display.textContent.length > 1) {
+            if (lastCharIsDecimal) {
+                decimalCount = 0;
+            }
+            display.textContent = display.textContent.slice(0, -1);
+        }
     }
-    else if (operation == 'equals') {
+    else if (fn == 'equals') {
+        let value;
+        if (display.textContent == '0' || display.textContent == '.') {
+            value = 0;
+        }
+        else {
+            value = +display.textContent;
+        }
+        decimalCount = 0;
+        storeCalculationInputs(value, input);
+    }
+    else if (fn == 'operator') {
+        // if (!operandExists()) {
+        //     updateDisplay('error', 'Error!');
+        //     return;
+        // }
+        let value;
+        if (display.textContent == '0' || display.textContent == '.') {
+            value = 0;
+        }
+        else {
+            value = +display.textContent;
+        }
+        decimalCount = 0;
+        storeCalculationInputs(value, input);
 
     }
-    else if (operation == 'addition') {
+    else if (fn == 'result') {
+        if (!inputsArrayFull()) {
+            updateDisplay('error', 'Error!');
+            return;
+        }
+        display.textContent = input;
+        let value = input;
+        storeCalculationInputs(value, undefined);
+        if (input == "Error!") {
+            resetInputsArray();
+        }
 
     }
-    
+    else if (fn == 'error') {
+        resetInputsArray();
+        decimalCount = 0;
+        display.textContent = input;
+    }
+
 }
 
 const btns = document.querySelectorAll('button');
 btns.forEach(btn => btn.addEventListener('click', clickBtn));
 
 function clickBtn(e) {
-    console.log(e.target.textContent);
-    switch (e.target.textContent) {
+    let btn = e.target.textContent;
+    console.log(`Button pressed is ${btn}`);
+    switch (btn) {
         case '1':
         case '2':
         case '3':
@@ -116,17 +204,16 @@ function clickBtn(e) {
         case '9':
         case '0':
         case '.':
-            updateDisplay('none', e.target.textContent);
+            updateDisplay('none', btn);
             break;
         case '=':
-            updateDisplay('equals', operate());
+            updateDisplay('result', calculateResult());
             break;
         case '÷':
         case 'x':
         case '-':
         case '+':
-            updateDisplay('', e.target.textContent);
-            storeInputs(null, null, e.target.textContent);
+            operatorFn(btn);
             break;
         case 'Clear':
             clearFn();
