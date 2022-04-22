@@ -45,14 +45,18 @@ function operandExists() {
     if (!(inputsArray[0] == undefined)) return true;
 }
 
+function operandAndOperatorExists() {
+    if (inputsArray[0] != undefined && inputsArray[1] == undefined && inputsArray[2] != undefined) return true;
+}
+
 function storeCalculationInputs(operand, operator) {
-    if (inputsArray[0] == undefined) {
+    if (inputsArray[0] == undefined && operand != undefined) { // If no operands are defined
         inputsArray[0] = operand;
     }
-    else if (inputsArray[1] == undefined) {
+    else if (inputsArray[1] == undefined) { // If only first operand is defined
         inputsArray[1] = operand;
     }
-    else if (inputsArray[0] != undefined && inputsArray[1] != undefined) {
+    else if (inputsArray[0] != undefined && inputsArray[1] != undefined) { // If both operands are defined
         inputsArray[0] = operand;
         inputsArray[1] = undefined;
         inputsArray[2] = operator;
@@ -60,13 +64,12 @@ function storeCalculationInputs(operand, operator) {
     if (operator != undefined) {
         inputsArray[2] = operator;
     }
-    console.log(inputsArray);
+    console.log(`storeCalculationInputs: ${inputsArray}`);
 }
 
 function calculateResult() {
-    storeCalculationInputs(+display.textContent, undefined);
     let result = operate(inputsArray[0], inputsArray[1], inputsArray[2]);
-    console.log(`Result is ${result}`);
+    console.log(`calculateResult: Result is ${result}`);
     return result;
 }
 
@@ -119,6 +122,40 @@ function updateDisplay(fn, input) {
             display.textContent += input;
         }
     }
+    else if (fn == 'operator') {
+        if (operandAndOperatorExists()) {
+            let value = +display.textContent;
+            storeCalculationInputs(value, undefined);
+            updateDisplay('result', calculateResult());
+            decimalCount = 0;
+            storeCalculationInputs(undefined, input);
+            return;
+        }
+        let value = +display.textContent;
+        decimalCount = 0;
+        storeCalculationInputs(value, input);
+    }
+    else if (fn == 'equals') {
+        storeCalculationInputs(+display.textContent, undefined);
+        updateDisplay('result', calculateResult());
+    }
+    else if (fn == 'result') {
+        if (!inputsArrayFull()) {
+            updateDisplay('error', 'Error!NOTFULL');
+            return;
+        }
+        display.textContent = input;
+        let value = input;
+        storeCalculationInputs(value, undefined);
+        if (input == "Error!") {
+            resetInputsArray();
+        }
+    }
+    else if (fn == 'error') {
+        resetInputsArray();
+        decimalCount = 0;
+        display.textContent = input;
+    }
     else if (fn == 'clear') {
         display.textContent = input;
     }
@@ -137,51 +174,6 @@ function updateDisplay(fn, input) {
             }
             display.textContent = display.textContent.slice(0, -1);
         }
-    }
-    else if (fn == 'equals') {
-        let value;
-        if (display.textContent == '0' || display.textContent == '.') {
-            value = 0;
-        }
-        else {
-            value = +display.textContent;
-        }
-        decimalCount = 0;
-        storeCalculationInputs(value, input);
-    }
-    else if (fn == 'operator') {
-        // if (!operandExists()) {
-        //     updateDisplay('error', 'Error!');
-        //     return;
-        // }
-        let value;
-        if (display.textContent == '0' || display.textContent == '.') {
-            value = 0;
-        }
-        else {
-            value = +display.textContent;
-        }
-        decimalCount = 0;
-        storeCalculationInputs(value, input);
-
-    }
-    else if (fn == 'result') {
-        if (!inputsArrayFull()) {
-            updateDisplay('error', 'Error!');
-            return;
-        }
-        display.textContent = input;
-        let value = input;
-        storeCalculationInputs(value, undefined);
-        if (input == "Error!") {
-            resetInputsArray();
-        }
-
-    }
-    else if (fn == 'error') {
-        resetInputsArray();
-        decimalCount = 0;
-        display.textContent = input;
     }
 
 }
@@ -207,7 +199,7 @@ function clickBtn(e) {
             updateDisplay('none', btn);
             break;
         case '=':
-            updateDisplay('result', calculateResult());
+            updateDisplay('equals', undefined);
             break;
         case '÷':
         case 'x':
@@ -221,8 +213,5 @@ function clickBtn(e) {
         case 'Delete':
             deleteFn();
             break;
-
     }
 }
-
-
